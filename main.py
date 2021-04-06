@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import base64
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -32,21 +33,32 @@ def login(browser):
     browser.execute_script("arguments[0].click();", element)
     # browser.find_element_by_css_selector('div.new_ser1').click()
     element = browser.find_element_by_css_selector('a#newGoInGame')
-    time.sleep(2)
+    time.sleep(1)
     # browser.find_element_by_css_selector('a#newGoInGame').click()
     browser.execute_script("arguments[0].click();", element)
     try:
         element = WebDriverWait(browser, 10).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div#gameContainer > iframe')))
         # element = browser.find_element_by_css_selector('canvas#layaCanvas')
         browser.switch_to.frame(element)
-        element = WebDriverWait(browser, 300).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'canvas#layaCanvas')))
+        canvas = WebDriverWait(browser, 300).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'canvas#layaCanvas')))
     except TimeoutException as e:
         print(e)
+        raise
     # inspect into canvas
+    time.sleep(300)
+    canvas_base64 = browser.execute_script("return arguments[0].toDataURL('image/png').substring(21);", canvas)
+    # decode
+    canvas_png = base64.b64decode(canvas_base64)
+    # save to a file
+    with open(r"canvas.png", 'wb') as f:
+        f.write(canvas_png)
     pass
 
 
-# now canvas automation
+def detect_exit_button():
+    pass
+
+
 def loading_wait():
     content = browser.page_source
     cleaner = clean.Cleaner()
@@ -56,6 +68,13 @@ def loading_wait():
 
 
 if __name__ == '__main__':
-    browser = webdriver.Chrome('chromedriver.exe')
-    # browser = webdriver.Chrome('chromedriver.exe', chrome_options=options)
+    from platform import platform
+    os_type = platform()
+    driver_name = 'chromedriver_windows.exe'
+    if os_type.startswith('Linux'):
+        driver_name = 'chromedriver'
+    browser = webdriver.Chrome(f'/drivers/{driver_name}')
+    browser.set_window_position(0, 0)
+    browser.set_window_size(1024, 768)
+    # browser = webdriver.Chrome('chromedriver_windows.exe', chrome_options=options)
     login(browser)
