@@ -28,6 +28,7 @@ class GameRobot:
         os_type = platform()
         driver_name = 'chromedriver_windows.exe'
         if os_type.startswith('Linux'):
+            driver_name = 'chromedriver'
             driver_path = f'drivers/{driver_name}'
             options = Options()
             options.add_argument('--headless')
