@@ -65,7 +65,7 @@ class GameRobot:
         self.driver.execute_script("arguments[0].click();", element)
         try:
             # switch to frame
-            element = WebDriverWait(self.driver, 10).until(
+            element = WebDriverWait(self.driver, 50).until(
                 expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div#gameContainer > iframe')))
             logger.info('Switching to game frame')
             self.driver.switch_to.frame(element)

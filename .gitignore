@@ -2,3 +2,4 @@
 .idea
 .venv/*
 Pipfile.lock
+*.log
