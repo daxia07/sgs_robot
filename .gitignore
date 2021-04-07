@@ -5,3 +5,5 @@ Pipfile.lock
 *.log
 canvas.png
 .cache
+*.json
+.vscode

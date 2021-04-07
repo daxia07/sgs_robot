@@ -5,9 +5,10 @@
 1. Install ChromeDriver
 
     ```bash
-    sudo apt install sudo apt-get install chromium-chromedriver
+    sudo apt-get install chromium-chromedriver
     # check with whereis chromedriver
     ```
+    Refer to this [article](https://askubuntu.com/questions/1204571/how-to-install-chromium-without-snap) for details 
 
 2. Update the path for linux platform
 3. Activate the venv by
