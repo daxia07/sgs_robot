@@ -7,7 +7,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from dotenv import dotenv_values
 import time
-from definitions import logger
+from definitions import logger, ROOT_DIR
 from platform import platform
 import imagehash
 from PIL import Image
@@ -27,32 +27,36 @@ class GameRobot:
         self.headless = headless
         os_type = platform()
         driver_name = 'chromedriver_windows.exe'
+        options = Options()
+        options.add_argument(f"user-data-dir={ROOT_DIR}/.cache")
+        options.add_argument(f'--profile-directory={ROOT_DIR}/.cache')
         if os_type.startswith('Linux'):
             # driver_name = 'chromedriver'
             driver_path = f'/usr/bin/chromedriver'
-            options = Options()
             options.add_argument('--headless')
             options.add_argument('--disable-gpu')
             self.driver = webdriver.Chrome(driver_path, options=options)
-        else:
+        elif os_type.startswith('Windows'):
             options = Options()
-            options.add_argument('--headless')
-            options.add_argument('--disable-gpu')
-            self.driver = webdriver.Chrome(f'drivers/{driver_name}', options=options)
-            if not headless:
-                self.driver = webdriver.Chrome(f'drivers/{driver_name}')
+            if headless:
+                options.add_argument('--headless')
+                options.add_argument('--disable-gpu')
+            self.driver = webdriver.Chrome(f'{ROOT_DIR}/drivers/{driver_name}', options=options)
+        else:
+            raise
+
         self.driver.set_window_position(0, 0)
         self.driver.set_window_size(1080, 768)
         self.login_timeout = login_timeout
-        self.config = dotenv_values(".env")
-        self.rtn_btn_img = Image.open('resources/ret_btn.png')
+        self.config = dotenv_values(f"{ROOT_DIR}/.env")
+        self.rtn_btn_img = Image.open(f'{ROOT_DIR}/resources/ret_btn.png')
         self.rtn_btn_hash = imagehash.average_hash(self.rtn_btn_img)
         self.rtn_btn_max_diff = 5
-        self.net_warn_img = Image.open('resources/network_issue.png')
+        self.net_warn_img = Image.open(f'{ROOT_DIR}/resources/network_issue.png')
         self.net_warn_hash = imagehash.average_hash(self.net_warn_img)
         self.net_warn_max_diff = 5
         self.loading_wait_secs = 100
-        self.warning_diag_img = Image.open('resources/warn_diag.png')
+        self.warning_diag_img = Image.open(f'{ROOT_DIR}/resources/warn_diag.png')
         self.warn_diag_hash = imagehash.average_hash(self.warning_diag_img)
         self.warn_diag_max_diff = 5
         self.canvas = None
@@ -61,6 +65,7 @@ class GameRobot:
 
     def login(self):
         self.driver.get("http://web.sanguosha.com/login/index.html")
+        logger.info(f'Logging in account {self.config["ACCOUNT"]}')
         check_mark = self.driver.find_element_by_css_selector("input.mycheckbox")
         # check_mark.location_once_scrolled_into_view
         check_mark.click()
@@ -75,19 +80,20 @@ class GameRobot:
         self.driver.execute_script("arguments[0].click();", element)
         try:
             # switch to frame
-            element = WebDriverWait(self.driver, 50).until(
+            element = WebDriverWait(self.driver, 200).until(
                 expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div#gameContainer > iframe')))
             logger.info('Switching to game frame')
             self.driver.switch_to.frame(element)
-            canvas = WebDriverWait(self.driver, 50).until(
-                expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'canvas#layaCanvas')))
+            canvas = WebDriverWait(self.driver, 400).until(
+                expected_conditions.presence_of_element_located((By.CSS_SELECTOR, f'canvas#layaCanvas')))
             self.canvas = canvas
+            logger.info('Canvas captured')
         except TimeoutException as e:
             logger.error('Cannot locate the canvas after logging in')
             raise e
-        logger.info('Canvas detected. Waiting for the game to load')
-        self.canvas.screenshot('canvas.png')
-        image = Image.open('canvas.png')
+        logger.info(f'{ROOT_DIR}/canvas detected. Waiting for the game to load')
+        self.canvas.screenshot(f'{ROOT_DIR}/canvas.png')
+        image = Image.open(f'{ROOT_DIR}/canvas.png')
         connected = self.detect_network_issue(image)
         if not connected:
             # refresh and check
@@ -104,8 +110,8 @@ class GameRobot:
             # scale to adjust the canvas style
             self.driver.set_window_size(900, 900)
             self.driver.set_window_size(1200, 900)
-            self.canvas.screenshot('canvas.png')
-            image = Image.open('canvas.png')
+            self.canvas.screenshot(f'{ROOT_DIR}/canvas.png')
+            image = Image.open(f'{ROOT_DIR}/canvas.png')
             # if warning diag found, restart the browser and login again
             self.refresh_on_warning(image)
             found = self.detect_ret_btn(image)
@@ -122,8 +128,8 @@ class GameRobot:
         found = True
         while found:
             # create screenshot
-            self.canvas.screenshot('canvas.png')
-            image = Image.open('canvas.png')
+            self.canvas.screenshot(f'{ROOT_DIR}/canvas.png')
+            image = Image.open(f'{ROOT_DIR}/canvas.png')
             self.refresh_on_warning(image)
             found = self.detect_ret_btn(image)
             if found:
@@ -154,6 +160,7 @@ class GameRobot:
         return abs(self.net_warn_hash-current_hash) > self.net_warn_max_diff
 
     def detect_warning_diag(self, image):
+        logger.info('Detecting warning dialog')
         if self.headless:
             center_diag = image.crop((433, 272, 816, 304))
         else:
@@ -164,6 +171,7 @@ class GameRobot:
     def refresh_on_warning(self, image):
         warning_found = self.detect_warning_diag(image)
         if warning_found:
+            logger.warning('Warning dialog found! Redo login')
             self.login()
 
     def play(self):
