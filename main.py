@@ -72,14 +72,16 @@ class GameRobot:
         self.driver.get("http://web.sanguosha.com/login/index.html")
         account = self.config[f'ACCOUNT{self.account_num}']
         logger.info(f'Logging in account {account}')
-        check_mark = self.driver.find_element_by_css_selector("input.mycheckbox")
-        # check_mark.location_once_scrolled_into_view
+        # Wait for element to appear
+        check_mark = WebDriverWait(self.driver, 200).until(
+            expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "input.mycheckbox")))
         check_mark.click()
         username_box, pass_box = self.driver.find_elements_by_css_selector('input.dobest_input')
         username_box.send_keys(self.config[f'ACCOUNT{self.account_num}'])
         pass_box.send_keys(f'{self.config[f"PASS{self.account_num}"]}\n')
         # login
-        element = self.driver.find_element_by_css_selector('div.new_ser1')
+        element = WebDriverWait(self.driver, 200).until(
+            expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div.new_ser1')))
         self.driver.execute_script("arguments[0].click();", element)
         element = self.driver.find_element_by_css_selector('a#newGoInGame')
         time.sleep(1)
