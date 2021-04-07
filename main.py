@@ -22,9 +22,10 @@ class NetWorkBroken(Exception):
 
 
 class GameRobot:
-    def __init__(self, login_timeout=300, headless=True):
+    def __init__(self, login_timeout=300, headless=True, account_num=1):
         # running environment
         self.headless = headless
+        self.account_num = account_num
         os_type = platform()
         driver_name = 'chromedriver_windows.exe'
         options = Options()
@@ -46,7 +47,8 @@ class GameRobot:
             raise
 
         self.driver.set_window_position(0, 0)
-        self.driver.set_window_size(1080, 768)
+        self.driver.set_window_size(1238, 860)
+        # self.driver.set_window_size(1080, 768)
         self.login_timeout = login_timeout
         self.config = dotenv_values(f"{ROOT_DIR}/.env")
         self.rtn_btn_img = Image.open(f'{ROOT_DIR}/resources/ret_btn.png')
@@ -65,13 +67,14 @@ class GameRobot:
 
     def login(self):
         self.driver.get("http://web.sanguosha.com/login/index.html")
-        logger.info(f'Logging in account {self.config["ACCOUNT"]}')
+        account = self.config[f'ACCOUNT{self.account_num}']
+        logger.info(f'Logging in account {account}')
         check_mark = self.driver.find_element_by_css_selector("input.mycheckbox")
         # check_mark.location_once_scrolled_into_view
         check_mark.click()
         username_box, pass_box = self.driver.find_elements_by_css_selector('input.dobest_input')
-        username_box.send_keys(self.config['ACCOUNT'])
-        pass_box.send_keys(f'{self.config["PASS"]}\n')
+        username_box.send_keys(self.config[f'ACCOUNT{self.account_num}'])
+        pass_box.send_keys(f'{self.config[f"PASS{self.account_num}"]}\n')
         # login
         element = self.driver.find_element_by_css_selector('div.new_ser1')
         self.driver.execute_script("arguments[0].click();", element)
@@ -91,7 +94,7 @@ class GameRobot:
         except TimeoutException as e:
             logger.error('Cannot locate the canvas after logging in')
             raise e
-        logger.info(f'{ROOT_DIR}/canvas detected. Waiting for the game to load')
+        logger.info(f'Waiting for the game to load')
         self.canvas.screenshot(f'{ROOT_DIR}/canvas.png')
         image = Image.open(f'{ROOT_DIR}/canvas.png')
         connected = self.detect_network_issue(image)
@@ -105,11 +108,12 @@ class GameRobot:
         time.sleep(self.loading_wait_secs)
         rem_time = self.login_timeout
         logger.info('Checking login status')
+        # TODO: check queue
         while rem_time > 0:
             # take screenshots and compare with existing image
             # scale to adjust the canvas style
-            self.driver.set_window_size(900, 900)
-            self.driver.set_window_size(1200, 900)
+            # self.driver.set_window_size(900, 900)
+            # time.sleep(2)
             self.canvas.screenshot(f'{ROOT_DIR}/canvas.png')
             image = Image.open(f'{ROOT_DIR}/canvas.png')
             # if warning diag found, restart the browser and login again
@@ -145,9 +149,9 @@ class GameRobot:
         # size as 1184 * 768
         # in headless mode the size is 1200 * 900
         if self.headless:
-            top_right_corner = image.crop((1161, 0, 1198, 22))
+            top_right_corner = image.crop((1165, 0, 1203, 22))
         else:
-            top_right_corner = image.crop((1145, 0, 1182, 22))
+            top_right_corner = image.crop((1181, 0, 1219, 22))
         current_hash = imagehash.average_hash(top_right_corner)
         return abs(self.rtn_btn_hash-current_hash) < self.rtn_btn_max_diff
 
@@ -182,6 +186,11 @@ class GameRobot:
 
 
 if __name__ == '__main__':
-    gr = GameRobot(headless=True)
+    import argparse
+    parser = argparse.ArgumentParser(description='Run SGS Robot program with options')
+    parser.add_argument('-m', '--headless', help='Run in headless mode', action='store_true')
+    parser.add_argument('-a', '--account', help='Which account to run', default=1)
+    args = vars(parser.parse_args())
+    gr = GameRobot(headless=args['headless'], account_num=args['account'])
     gr.keep_alive()
 
