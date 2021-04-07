@@ -96,7 +96,12 @@ class GameRobot:
     def keep_alive(self):
         logger.info('Looping to keep alive')
         import random
-        while True:
+        found = True
+        while found:
+            # create screenshot
+            self.canvas.screenshot('canvas.png')
+            image = Image.open('canvas.png')
+            found = self.detect_ret_btn(image)
             self.driver.execute_script("arguments[0].click();", self.canvas)
             secs = random.randrange(5, 100)
             time.sleep(secs)
