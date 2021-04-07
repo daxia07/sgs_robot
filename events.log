@@ -9,3 +9,17 @@
 2021-04-07 10:45:41.645 | INFO     | __main__:login:73 - Current offset is 8 and 220s left
 2021-04-07 10:45:52.915 | INFO     | __main__:login:73 - Current offset is 0 and 210s left
 2021-04-07 11:14:20.823 | INFO     | __main__:__init__:23 - SGS game robot initialised
+2021-04-07 11:31:07.336 | INFO     | __main__:login:52 - Switching to game frame
+2021-04-07 11:31:15.584 | INFO     | __main__:login:59 - Canvas detected. Waiting for the game to load
+2021-04-07 11:33:42.125 | INFO     | __main__:login:52 - Switching to game frame
+2021-04-07 11:33:51.402 | INFO     | __main__:login:59 - Canvas detected. Waiting for the game to load
+2021-04-07 11:38:23.559 | INFO     | __main__:login:54 - Switching to game frame
+2021-04-07 11:38:30.807 | INFO     | __main__:login:61 - Canvas detected. Waiting for the game to load
+2021-04-07 11:57:15.593 | INFO     | __main__:login:62 - Switching to game frame
+2021-04-07 11:57:32.536 | ERROR    | __main__:login:67 - Cannot locate the canvas after logging in
+2021-04-07 11:58:03.074 | INFO     | __main__:login:62 - Switching to game frame
+2021-04-07 11:58:27.993 | INFO     | __main__:login:69 - Canvas detected. Waiting for the game to load
+2021-04-07 12:02:12.549 | INFO     | __main__:login:66 - Switching to game frame
+2021-04-07 12:02:20.431 | INFO     | __main__:login:73 - Canvas detected. Waiting for the game to load
+2021-04-07 12:04:21.739 | INFO     | __main__:login:84 - Login successful
+2021-04-07 12:04:21.740 | INFO     | __main__:__init__:46 - SGS game robot initialised
