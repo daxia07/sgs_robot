@@ -12,6 +12,9 @@ import lxml.html as lh
 import lxml.html.clean as clean
 from dotenv import dotenv_values
 import time
+import loguru as logger
+
+logger.add('events.log', retention='5 days', backtrace=True, diagnose=True)
 
 
 options = Options()
