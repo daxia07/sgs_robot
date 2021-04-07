@@ -173,6 +173,6 @@ class GameRobot:
 
 
 if __name__ == '__main__':
-    gr = GameRobot(headless=False)
+    gr = GameRobot(headless=True)
     gr.keep_alive()
 
