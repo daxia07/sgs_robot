@@ -28,8 +28,8 @@ class GameRobot:
         os_type = platform()
         driver_name = 'chromedriver_windows.exe'
         if os_type.startswith('Linux'):
-            driver_name = 'chromedriver'
-            driver_path = f'drivers/{driver_name}'
+            # driver_name = 'chromedriver'
+            driver_path = f'/usr/bin/chromedriver'
             options = Options()
             options.add_argument('--headless')
             options.add_argument('--disable-gpu')
