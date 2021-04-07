@@ -47,7 +47,10 @@ class GameRobot:
             raise
 
         self.driver.set_window_position(0, 0)
-        self.driver.set_window_size(1238, 860)
+        if self.headless:
+            self.driver.set_window_size(1222, 730)
+        else:
+            self.driver.set_window_size(1238, 860)
         # self.driver.set_window_size(1080, 768)
         self.login_timeout = login_timeout
         self.config = dotenv_values(f"{ROOT_DIR}/.env")
@@ -149,7 +152,7 @@ class GameRobot:
         # size as 1184 * 768
         # in headless mode the size is 1200 * 900
         if self.headless:
-            top_right_corner = image.crop((1165, 0, 1203, 22))
+            top_right_corner = image.crop((1181, 0, 1219, 22))
         else:
             top_right_corner = image.crop((1181, 0, 1219, 22))
         current_hash = imagehash.average_hash(top_right_corner)
@@ -165,10 +168,11 @@ class GameRobot:
 
     def detect_warning_diag(self, image):
         logger.info('Detecting warning dialog')
+        # TODO: update with the latest window size
         if self.headless:
-            center_diag = image.crop((433, 272, 816, 304))
+            center_diag = image.crop((420, 254, 803, 286))
         else:
-            center_diag = image.crop((417, 272, 800, 304))
+            center_diag = image.crop((420, 254, 803, 286))
         current_hash = imagehash.average_hash(center_diag)
         return abs(self.warn_diag_hash-current_hash) < self.warn_diag_max_diff
 
