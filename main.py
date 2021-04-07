@@ -145,7 +145,7 @@ class GameRobot:
                 logger.error(f'Login failed during keeping alive task')
                 raise LoginError('')
 
-            secs = random.randrange(5, 100)
+            secs = random.randrange(250, 520)
             time.sleep(secs)
 
     def detect_ret_btn(self, image):

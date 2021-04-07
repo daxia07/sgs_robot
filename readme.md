@@ -20,3 +20,5 @@
     ```bash
     python main.py
     ```
+5. in cmd
+C:\Users\MingL\PycharmProjects\Ming\UIAutomation\.venv\Scripts\python.exe C:/Users/MingL/PycharmProjects/Ming/UIAutomation/main.py -m
