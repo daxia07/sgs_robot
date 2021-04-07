@@ -30,10 +30,14 @@ class GameRobot:
             driver_path = f'drivers/{driver_name}'
             options = Options()
             options.add_argument('--headless')
-            options.add_argument('--disable-gpu')  # Last I checked this was necessary.
-            self.driver = webdriver.Chrome(driver_path, chrome_options=options)
+            options.add_argument('--disable-gpu')
+            self.driver = webdriver.Chrome(driver_path, options=options)
         else:
-            self.driver = webdriver.Chrome(f'drivers/{driver_name}')
+            options = Options()
+            options.add_argument('--headless')
+            options.add_argument('--disable-gpu')
+            self.driver = webdriver.Chrome(f'drivers/{driver_name}', options=options)
+            # self.driver = webdriver.Chrome(f'drivers/{driver_name}')
         self.driver.set_window_position(0, 0)
         self.driver.set_window_size(1080, 768)
         self.login_timeout = login_timeout
@@ -91,13 +95,19 @@ class GameRobot:
 
     def keep_alive(self):
         logger.info('Looping to keep alive')
+        import random
         while True:
             self.driver.execute_script("arguments[0].click();", self.canvas)
-            time.sleep(5)
+            secs = random.randrange(5, 100)
+            time.sleep(secs)
 
     def detect_ret_btn(self, image):
         # size as 1184 * 768
-        top_right_corner = image.crop((1145, 0, 1182, 22))
+        # in headless mode the size is 1200 * 900
+        if image.size[0] == 1200:
+            top_right_corner = image.crop((1161, 0, 1198, 22))
+        else:
+            top_right_corner = image.crop((1145, 0, 1182, 22))
         current_hash = imagehash.average_hash(top_right_corner)
         if abs(self.rtn_btn_hash-current_hash) < self.rtn_btn_max_diff:
             return True
