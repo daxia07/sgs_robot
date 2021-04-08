@@ -49,7 +49,6 @@ class GameRobot:
         os_type = platform()
         options = Options()
         options.add_argument(f"user-data-dir={ROOT_DIR}/.cache")
-        # options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument(f'--profile-directory={ROOT_DIR}/.cache')
         options.add_argument('--disable-gpu')
@@ -58,6 +57,7 @@ class GameRobot:
         if headless:
             options.add_argument('--headless')
         if os_type.startswith('Linux'):
+            options.add_argument("--no-sandbox")
             driver_path = f'/usr/bin/chromedriver'
             self.driver = webdriver.Chrome(executable_path=driver_path, options=options)
         elif os_type.startswith('Windows'):
