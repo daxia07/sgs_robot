@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys
+
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
@@ -27,13 +29,14 @@ def catch_exception(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except Exception as e:
+        except KeyboardInterrupt as e:
             self = args[0]
             logger.error(e)
             self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
             dom = self.driver.execute_script("return document.documentElement.outerHTML")
             with open('dom.html', 'w', encoding="utf-8") as outfile:
                 outfile.write(dom)
+            sys.exit(0)
 
     return wrapper
 
@@ -94,7 +97,7 @@ class GameRobot:
                 return
         logger.info('Page redirected successfully')
 
-    # @catch_exception
+    @catch_exception
     def login(self):
         self.driver.get("http://web.sanguosha.com/login/index.html")
         if self.headless:
@@ -183,7 +186,7 @@ class GameRobot:
             rem_time -= 5
         raise LoginError('Login failed')
 
-    # @catch_exception
+    @catch_exception
     def keep_alive(self):
         logger.info('Looping to keep alive')
         import random
