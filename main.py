@@ -49,14 +49,16 @@ class GameRobot:
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument(f'--profile-directory={ROOT_DIR}/.cache')
         options.add_argument('--disable-gpu')
+        # options.add_argument('--enable-blink-features=ScrollTopLeftInterop')
         if headless:
             options.add_argument('--headless')
         if os_type.startswith('Linux'):
             # driver_name = 'chromedriver'
-            driver_path = f'/usr/bin/chromedriver'
-            self.driver = webdriver.Chrome(driver_path, options=options)
+            # driver_path = f'/usr/bin/chromedriver'
+            driver_path = f'/usr/bin/operadriver'
+            self.driver = webdriver.Opera(executable_path=driver_path, options=options)
         elif os_type.startswith('Windows'):
-            self.driver = webdriver.Chrome(f'{ROOT_DIR}/drivers/{driver_name}', options=options)
+            self.driver = webdriver.Opera(executable_path=f'{ROOT_DIR}/drivers/{driver_name}', options=options)
         else:
             raise
         # self.driver.set_window_size(1080, 768)
