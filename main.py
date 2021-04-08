@@ -75,7 +75,8 @@ class GameRobot:
         # Wait for element to appear
         check_mark = WebDriverWait(self.driver, 2000).until(
             expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "input.mycheckbox")))
-        check_mark.click()
+        self.driver.execute_script("arguments[0].click();", check_mark)
+        # check_mark.click()
         username_box, pass_box = self.driver.find_elements_by_css_selector('input.dobest_input')
         username_box.send_keys(self.config[f'ACCOUNT{self.account_num}'])
         pass_box.send_keys(f'{self.config[f"PASS{self.account_num}"]}\n')
