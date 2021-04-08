@@ -94,8 +94,8 @@ class GameRobot:
                 continue
             except (ElementClickInterceptedException, StaleElementReferenceException, ElementNotInteractableException):
                 logger.info('Click action not valid due to element no longer exit')
-                return
         logger.info('Page redirected successfully')
+        self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
 
     @catch_exception
     def login(self):
