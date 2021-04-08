@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from dotenv import dotenv_values
 import time
@@ -42,30 +42,23 @@ class GameRobot:
         self.headless = headless
         self.account_num = account_num
         os_type = platform()
-        driver_name = 'chromedriver_windows.exe'
+        driver_name = 'operadriver.exe'
         options = Options()
         options.add_argument(f"user-data-dir={ROOT_DIR}/.cache")
+        # options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         options.add_argument(f'--profile-directory={ROOT_DIR}/.cache')
+        options.add_argument('--disable-gpu')
+        if headless:
+            options.add_argument('--headless')
         if os_type.startswith('Linux'):
             # driver_name = 'chromedriver'
             driver_path = f'/usr/bin/chromedriver'
-            options.add_argument('--headless')
-            options.add_argument('--disable-gpu')
             self.driver = webdriver.Chrome(driver_path, options=options)
         elif os_type.startswith('Windows'):
-            options = Options()
-            if headless:
-                options.add_argument('--headless')
-                options.add_argument('--disable-gpu')
             self.driver = webdriver.Chrome(f'{ROOT_DIR}/drivers/{driver_name}', options=options)
         else:
             raise
-
-        self.driver.set_window_position(0, 0)
-        if self.headless:
-            self.driver.set_window_size(1222, 730)
-        else:
-            self.driver.set_window_size(1238, 860)
         # self.driver.set_window_size(1080, 768)
         self.login_timeout = login_timeout
         self.config = dotenv_values(f"{ROOT_DIR}/.env")
@@ -83,16 +76,30 @@ class GameRobot:
         self.login()
         logger.info('SGS game robot initialised')
 
-    @catch_exception
+    # @catch_exception
     def login(self):
         self.driver.get("http://web.sanguosha.com/login/index.html")
+        if self.headless:
+            self.driver.set_window_size(1222, 730)
+        else:
+            self.driver.set_window_size(1278, 860)
+        try:
+            self.driver.implicitly_wait(10)
+            logout_btn = self.driver.find_element_by_css_selector('#logoutBtn')
+            logger.info('Already login, now exiting')
+            self.driver.execute_script("arguments[0].click();", logout_btn)
+            self.driver.implicitly_wait(10)
+        except NoSuchElementException:
+            logger.info('Current page is the login page')
+
         account = self.config[f'ACCOUNT{self.account_num}']
         logger.info(f'Logging in account {account}')
         # Wait for element to appear
         check_mark = WebDriverWait(self.driver, 2000).until(
             expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "input.mycheckbox")))
         # self.driver.execute_script('document.querySelector("input.mycheckbox").checked = true;', check_mark)
-        self.driver.execute_script("arguments[0].click();", check_mark)
+        if not check_mark.is_selected():
+            self.driver.execute_script("arguments[0].click();", check_mark)
         # check_mark.click()
         username_box, pass_box = self.driver.find_elements_by_css_selector('input.dobest_input')
         username_box.send_keys(self.config[f'ACCOUNT{self.account_num}'])
@@ -102,7 +109,6 @@ class GameRobot:
             expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div.new_ser1')))
         self.driver.execute_script("arguments[0].click();", element)
         element = self.driver.find_element_by_css_selector('a#newGoInGame')
-        time.sleep(1)
         self.driver.execute_script("arguments[0].click();", element)
         try:
             # switch to frame
@@ -149,7 +155,7 @@ class GameRobot:
             rem_time -= 5
         raise LoginError('Login failed')
 
-    @catch_exception
+    # @catch_exception
     def keep_alive(self):
         logger.info('Looping to keep alive')
         import random
@@ -170,9 +176,14 @@ class GameRobot:
             time.sleep(secs)
 
     def detect_ret_btn(self, image):
-        # size as 1184 * 768
-        # in headless mode the size is 1200 * 900
-        top_right_corner = image.crop((1181, 0, 1219, 22))
+        # image of 38 *22
+        if self.headless:
+            area = (1152, 0, 1190, 22)
+        else:
+            area = (1181, 4, 1218, 26)
+        top_right_corner = image.crop(area)
+        # top_right_corner.show()
+        # top_right_corner.save(f'{ROOT_DIR}/resources/ret_btn.png')
         current_hash = imagehash.average_hash(top_right_corner)
         return abs(self.rtn_btn_hash-current_hash) < self.rtn_btn_max_diff
 
