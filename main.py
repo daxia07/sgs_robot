@@ -3,7 +3,9 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, \
+    NoSuchElementException, ElementClickInterceptedException,\
+    StaleElementReferenceException, ElementNotInteractableException
 from selenium.webdriver.chrome.options import Options
 from dotenv import dotenv_values
 import time
@@ -42,7 +44,6 @@ class GameRobot:
         self.headless = headless
         self.account_num = account_num
         os_type = platform()
-        driver_name = 'operadriver.exe'
         options = Options()
         options.add_argument(f"user-data-dir={ROOT_DIR}/.cache")
         # options.add_argument("--no-sandbox")
@@ -50,18 +51,16 @@ class GameRobot:
         options.add_argument(f'--profile-directory={ROOT_DIR}/.cache')
         options.add_argument('--disable-gpu')
         # options.add_argument('--enable-blink-features=ScrollTopLeftInterop')
+        driver_name = 'chromedriver_windows.exe'
         if headless:
             options.add_argument('--headless')
         if os_type.startswith('Linux'):
-            # driver_name = 'chromedriver'
-            # driver_path = f'/usr/bin/chromedriver'
-            driver_path = f'/usr/bin/operadriver'
-            self.driver = webdriver.Opera(executable_path=driver_path, options=options)
+            driver_path = f'/usr/bin/chromedriver'
+            self.driver = webdriver.Chrome(executable_path=driver_path, options=options)
         elif os_type.startswith('Windows'):
-            self.driver = webdriver.Opera(executable_path=f'{ROOT_DIR}/drivers/{driver_name}', options=options)
+            self.driver = webdriver.Chrome(executable_path=f'{ROOT_DIR}/drivers/{driver_name}', options=options)
         else:
             raise
-        # self.driver.set_window_size(1080, 768)
         self.login_timeout = login_timeout
         self.config = dotenv_values(f"{ROOT_DIR}/.env")
         self.rtn_btn_img = Image.open(f'{ROOT_DIR}/resources/ret_btn.png')
@@ -70,7 +69,7 @@ class GameRobot:
         self.net_warn_img = Image.open(f'{ROOT_DIR}/resources/network_issue.png')
         self.net_warn_hash = imagehash.average_hash(self.net_warn_img)
         self.net_warn_max_diff = 5
-        self.loading_wait_secs = 100
+        self.loading_wait_secs = 40
         self.warning_diag_img = Image.open(f'{ROOT_DIR}/resources/warn_diag.png')
         self.warn_diag_hash = imagehash.average_hash(self.warning_diag_img)
         self.warn_diag_max_diff = 5
@@ -78,30 +77,53 @@ class GameRobot:
         self.login()
         logger.info('SGS game robot initialised')
 
+    def reliable_click(self, element, css_selector):
+        success = False
+        while not success:
+            try:
+                element.click()
+                logger.info(f'{css_selector} Button clicked, and wait for response')
+                WebDriverWait(self.driver, 10).until_not(
+                    expected_conditions.presence_of_element_located((By.CSS_SELECTOR, css_selector)))
+                success = True
+            except TimeoutException:
+                logger.warning(f'Timeout for button click {css_selector}! Retrying')
+                continue
+            except (ElementClickInterceptedException, StaleElementReferenceException, ElementNotInteractableException):
+                logger.info('Click action not valid due to element no longer exit')
+                return
+        logger.info('Page redirected successfully')
+
     # @catch_exception
     def login(self):
         self.driver.get("http://web.sanguosha.com/login/index.html")
         if self.headless:
-            self.driver.set_window_size(1222, 730)
+            self.driver.set_window_size(1228, 730)
         else:
             self.driver.set_window_size(1278, 860)
         try:
             self.driver.implicitly_wait(10)
             logout_btn = self.driver.find_element_by_css_selector('#logoutBtn')
             logger.info('Already login, now exiting')
-            self.driver.execute_script("arguments[0].click();", logout_btn)
-            self.driver.implicitly_wait(10)
+            self.reliable_click(logout_btn, '#logoutBtn')
+            # self.driver.execute_script("arguments[0].click();", logout_btn)
+            self.driver.implicitly_wait(25)
+            time.sleep(10)
         except NoSuchElementException:
             logger.info('Current page is the login page')
 
         account = self.config[f'ACCOUNT{self.account_num}']
         logger.info(f'Logging in account {account}')
         # Wait for element to appear
+        self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+        # assert logout has been successful
+
         check_mark = WebDriverWait(self.driver, 2000).until(
             expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "input.mycheckbox")))
         # self.driver.execute_script('document.querySelector("input.mycheckbox").checked = true;', check_mark)
         if not check_mark.is_selected():
-            self.driver.execute_script("arguments[0].click();", check_mark)
+            self.reliable_click(check_mark, "input.mycheckbox")
+            # self.driver.execute_script("arguments[0].click();", check_mark)
         # check_mark.click()
         username_box, pass_box = self.driver.find_elements_by_css_selector('input.dobest_input')
         username_box.send_keys(self.config[f'ACCOUNT{self.account_num}'])
@@ -109,16 +131,20 @@ class GameRobot:
         # login
         element = WebDriverWait(self.driver, 2000).until(
             expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div.new_ser1')))
+        # self.reliable_click(element, "div.new_ser1")
         self.driver.execute_script("arguments[0].click();", element)
         element = self.driver.find_element_by_css_selector('a#newGoInGame')
-        self.driver.execute_script("arguments[0].click();", element)
+        self.reliable_click(element, "a#newGoInGame")
+        # self.driver.execute_script("arguments[0].click();", element)
+        # click no response
+        self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
         try:
             # switch to frame
-            element = WebDriverWait(self.driver, 2000).until(
+            element = WebDriverWait(self.driver, 200).until(
                 expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div#gameContainer > iframe')))
             logger.info('Switching to game frame')
             self.driver.switch_to.frame(element)
-            canvas = WebDriverWait(self.driver, 4000).until(
+            canvas = WebDriverWait(self.driver, 200).until(
                 expected_conditions.presence_of_element_located((By.CSS_SELECTOR, f'canvas#layaCanvas')))
             self.canvas = canvas
             logger.info('Canvas captured')
@@ -180,7 +206,7 @@ class GameRobot:
     def detect_ret_btn(self, image):
         # image of 38 *22
         if self.headless:
-            area = (1152, 0, 1190, 22)
+            area = (1184, 0, 1222, 22)
         else:
             area = (1181, 4, 1218, 26)
         top_right_corner = image.crop(area)
