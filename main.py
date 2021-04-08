@@ -158,6 +158,10 @@ class GameRobot:
             logger.info('Canvas captured')
         except TimeoutException as e:
             logger.error('Cannot locate the canvas after logging in')
+            self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+            dom = self.driver.execute_script("return document.documentElement.outerHTML")
+            with open('dom.html', 'w', encoding="utf-8") as outfile:
+                outfile.write(dom)
             raise e
         logger.info(f'Waiting for the game to load')
         self.canvas.screenshot(f'{ROOT_DIR}/canvas.png')
