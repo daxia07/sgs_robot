@@ -145,8 +145,13 @@ class GameRobot:
             # switch to frame
             element = WebDriverWait(self.driver, 200).until(
                 expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div#gameContainer > iframe')))
-            logger.info('Switching to game frame')
             self.driver.switch_to.frame(element)
+            logger.info('Switched to game frame')
+            time.sleep(30)
+            self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+            dom = self.driver.execute_script("return document.documentElement.outerHTML")
+            with open('dom.html', 'w', encoding="utf-8") as outfile:
+                outfile.write(dom)
             canvas = WebDriverWait(self.driver, 200).until(
                 expected_conditions.presence_of_element_located((By.CSS_SELECTOR, f'canvas#layaCanvas')))
             self.canvas = canvas
@@ -168,7 +173,6 @@ class GameRobot:
         time.sleep(self.loading_wait_secs)
         rem_time = self.login_timeout
         logger.info('Checking login status')
-        # TODO: check queue
         while rem_time > 0:
             # take screenshots and compare with existing image
             # scale to adjust the canvas style
@@ -207,6 +211,7 @@ class GameRobot:
             time.sleep(secs)
 
     def detect_ret_btn(self, image):
+        logger.info('Detecting warning dialog')
         # image of 38 *22
         if self.headless:
             area = (1184, 0, 1222, 22)
@@ -214,7 +219,7 @@ class GameRobot:
             area = (1181, 4, 1218, 26)
         top_right_corner = image.crop(area)
         # top_right_corner.show()
-        # top_right_corner.save(f'{ROOT_DIR}/resources/ret_btn.png')
+        top_right_corner.save(f'{ROOT_DIR}/ret_btn_screenshot.png')
         current_hash = imagehash.average_hash(top_right_corner)
         return abs(self.rtn_btn_hash-current_hash) < self.rtn_btn_max_diff
 
