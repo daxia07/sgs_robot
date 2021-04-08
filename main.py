@@ -55,7 +55,7 @@ class GameRobot:
         if os_type.startswith('Linux'):
             # driver_name = 'chromedriver'
             # driver_path = f'/usr/bin/chromedriver'
-            driver_path = f'/usr/bin/operadriver'
+            driver_path = f'{ROOT_DIR}/drivers/operadriver'
             self.driver = webdriver.Opera(executable_path=driver_path, options=options)
         elif os_type.startswith('Windows'):
             self.driver = webdriver.Opera(executable_path=f'{ROOT_DIR}/drivers/{driver_name}', options=options)
