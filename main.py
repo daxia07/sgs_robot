@@ -73,14 +73,14 @@ class GameRobot:
         account = self.config[f'ACCOUNT{self.account_num}']
         logger.info(f'Logging in account {account}')
         # Wait for element to appear
-        check_mark = WebDriverWait(self.driver, 200).until(
+        check_mark = WebDriverWait(self.driver, 2000).until(
             expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "input.mycheckbox")))
         check_mark.click()
         username_box, pass_box = self.driver.find_elements_by_css_selector('input.dobest_input')
         username_box.send_keys(self.config[f'ACCOUNT{self.account_num}'])
         pass_box.send_keys(f'{self.config[f"PASS{self.account_num}"]}\n')
         # login
-        element = WebDriverWait(self.driver, 200).until(
+        element = WebDriverWait(self.driver, 2000).until(
             expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div.new_ser1')))
         self.driver.execute_script("arguments[0].click();", element)
         element = self.driver.find_element_by_css_selector('a#newGoInGame')
@@ -88,11 +88,11 @@ class GameRobot:
         self.driver.execute_script("arguments[0].click();", element)
         try:
             # switch to frame
-            element = WebDriverWait(self.driver, 200).until(
+            element = WebDriverWait(self.driver, 2000).until(
                 expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div#gameContainer > iframe')))
             logger.info('Switching to game frame')
             self.driver.switch_to.frame(element)
-            canvas = WebDriverWait(self.driver, 400).until(
+            canvas = WebDriverWait(self.driver, 4000).until(
                 expected_conditions.presence_of_element_located((By.CSS_SELECTOR, f'canvas#layaCanvas')))
             self.canvas = canvas
             logger.info('Canvas captured')
@@ -153,28 +153,18 @@ class GameRobot:
     def detect_ret_btn(self, image):
         # size as 1184 * 768
         # in headless mode the size is 1200 * 900
-        if self.headless:
-            top_right_corner = image.crop((1181, 0, 1219, 22))
-        else:
-            top_right_corner = image.crop((1181, 0, 1219, 22))
+        top_right_corner = image.crop((1181, 0, 1219, 22))
         current_hash = imagehash.average_hash(top_right_corner)
         return abs(self.rtn_btn_hash-current_hash) < self.rtn_btn_max_diff
 
     def detect_network_issue(self, image):
-        if self.headless:
-            center_diag = image.crop((407, 337, 791, 557))
-        else:
-            center_diag = image.crop((391, 337, 775, 557))
+        center_diag = image.crop((407, 337, 791, 557))
         current_hash = imagehash.average_hash(center_diag)
         return abs(self.net_warn_hash-current_hash) > self.net_warn_max_diff
 
     def detect_warning_diag(self, image):
         logger.info('Detecting warning dialog')
-        # TODO: update with the latest window size
-        if self.headless:
-            center_diag = image.crop((420, 254, 803, 286))
-        else:
-            center_diag = image.crop((420, 254, 803, 286))
+        center_diag = image.crop((420, 254, 803, 286))
         current_hash = imagehash.average_hash(center_diag)
         return abs(self.warn_diag_hash-current_hash) < self.warn_diag_max_diff
 
