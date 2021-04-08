@@ -7,3 +7,5 @@ canvas.png
 .cache
 *.json
 .vscode
+*.html
+page.png

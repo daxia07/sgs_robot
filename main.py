@@ -21,6 +21,21 @@ class NetWorkBroken(Exception):
     pass
 
 
+def catch_exception(f):
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            self = args[0]
+            logger.error(e)
+            self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+            dom = self.driver.execute_script("return document.documentElement.outerHTML")
+            with open('dom.html', 'w', encoding="utf-8") as outfile:
+                outfile.write(dom)
+
+    return wrapper
+
+
 class GameRobot:
     def __init__(self, login_timeout=300, headless=True, account_num=1):
         # running environment
@@ -68,6 +83,7 @@ class GameRobot:
         self.login()
         logger.info('SGS game robot initialised')
 
+    @catch_exception
     def login(self):
         self.driver.get("http://web.sanguosha.com/login/index.html")
         account = self.config[f'ACCOUNT{self.account_num}']
@@ -75,6 +91,7 @@ class GameRobot:
         # Wait for element to appear
         check_mark = WebDriverWait(self.driver, 2000).until(
             expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "input.mycheckbox")))
+        # self.driver.execute_script('document.querySelector("input.mycheckbox").checked = true;', check_mark)
         self.driver.execute_script("arguments[0].click();", check_mark)
         # check_mark.click()
         username_box, pass_box = self.driver.find_elements_by_css_selector('input.dobest_input')
@@ -132,6 +149,7 @@ class GameRobot:
             rem_time -= 5
         raise LoginError('Login failed')
 
+    @catch_exception
     def keep_alive(self):
         logger.info('Looping to keep alive')
         import random
