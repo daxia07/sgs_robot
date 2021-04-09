@@ -98,6 +98,12 @@ class GameRobot:
                 self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
                 return
 
+    def page_shot(self):
+        self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+        dom = self.driver.execute_script("return document.documentElement.outerHTML")
+        with open('dom.html', 'w', encoding="utf-8") as outfile:
+            outfile.write(dom)
+
     @catch_exception
     def login(self):
         self.driver.get("http://web.sanguosha.com/login/index.html")
@@ -119,9 +125,9 @@ class GameRobot:
         account = self.config[f'ACCOUNT{self.account_num}']
         logger.info(f'Logging in account {account}')
         # Wait for element to appear
-        self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+        self.page_shot()
+        # self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
         # assert logout has been successful
-
         check_mark = WebDriverWait(self.driver, 2000).until(
             expected_conditions.presence_of_element_located((By.CSS_SELECTOR, "input.mycheckbox")))
         # self.driver.execute_script('document.querySelector("input.mycheckbox").checked = true;', check_mark)
@@ -141,7 +147,8 @@ class GameRobot:
         self.reliable_click(element, "a#newGoInGame")
         # self.driver.execute_script("arguments[0].click();", element)
         # click no response
-        self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+        # self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+        self.page_shot()
         try:
             # switch to frame
             element = WebDriverWait(self.driver, 200).until(
@@ -149,20 +156,13 @@ class GameRobot:
             self.driver.switch_to.frame(element)
             logger.info('Switched to game frame')
             time.sleep(30)
-            self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
-            dom = self.driver.execute_script("return document.documentElement.outerHTML")
-            with open('dom.html', 'w', encoding="utf-8") as outfile:
-                outfile.write(dom)
             canvas = WebDriverWait(self.driver, 200).until(
                 expected_conditions.presence_of_element_located((By.CSS_SELECTOR, f'canvas#layaCanvas')))
             self.canvas = canvas
             logger.info('Canvas captured')
         except TimeoutException as e:
             logger.error('Cannot locate the canvas after logging in')
-            self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
-            dom = self.driver.execute_script("return document.documentElement.outerHTML")
-            with open('dom.html', 'w', encoding="utf-8") as outfile:
-                outfile.write(dom)
+            self.page_shot()
             raise e
         logger.info(f'Waiting for the game to load')
         self.canvas.screenshot(f'{ROOT_DIR}/canvas.png')
@@ -193,10 +193,7 @@ class GameRobot:
                 return
             time.sleep(5)
             rem_time -= 5
-            self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
-            dom = self.driver.execute_script("return document.documentElement.outerHTML")
-            with open('dom.html', 'w', encoding="utf-8") as outfile:
-                outfile.write(dom)
+            self.page_shot()
         raise LoginError('Login failed')
 
     @catch_exception
