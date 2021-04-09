@@ -186,7 +186,7 @@ class GameRobot:
             self.canvas.screenshot(f'{ROOT_DIR}/canvas.png')
             image = Image.open(f'{ROOT_DIR}/canvas.png')
             # if warning diag found, restart the browser and login again
-            self.refresh_on_warning(image)
+            # self.refresh_on_warning(image)
             found = self.detect_ret_btn(image)
             if found:
                 logger.info('Login successful')
