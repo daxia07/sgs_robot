@@ -72,7 +72,7 @@ class GameRobot:
         self.net_warn_img = Image.open(f'{ROOT_DIR}/resources/network_issue.png')
         self.net_warn_hash = imagehash.average_hash(self.net_warn_img)
         self.net_warn_max_diff = 5
-        self.loading_wait_secs = 40
+        self.loading_wait_secs = 20
         self.warning_diag_img = Image.open(f'{ROOT_DIR}/resources/warn_diag.png')
         self.warn_diag_hash = imagehash.average_hash(self.warning_diag_img)
         self.warn_diag_max_diff = 5
@@ -94,8 +94,9 @@ class GameRobot:
                 continue
             except (ElementClickInterceptedException, StaleElementReferenceException, ElementNotInteractableException):
                 logger.info('Click action not valid due to element no longer exit')
-        logger.info('Page redirected successfully')
-        self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+                logger.info('Page redirected successfully')
+                self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+                return
 
     @catch_exception
     def login(self):
