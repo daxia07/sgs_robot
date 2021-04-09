@@ -193,6 +193,10 @@ class GameRobot:
                 return
             time.sleep(5)
             rem_time -= 5
+            self.driver.save_screenshot(f'{ROOT_DIR}/page.png')
+            dom = self.driver.execute_script("return document.documentElement.outerHTML")
+            with open('dom.html', 'w', encoding="utf-8") as outfile:
+                outfile.write(dom)
         raise LoginError('Login failed')
 
     @catch_exception
